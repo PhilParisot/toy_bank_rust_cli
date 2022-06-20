@@ -5,6 +5,11 @@ use std::{
     io::{Read, Write},
 };
 
+// Added all paths here so that all paths are in the same location
+pub const PATH: &str = "data";
+const TEST_PATH: &str = "test_data";
+
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Bank {
     data_path: String,
@@ -49,6 +54,9 @@ impl Bank {
     // I'm also cloning "name" when a borrow and pointer to BankAccount.name would be preferable
     // But causing problems with the serializer and lifetime
     pub fn create_account(&mut self, name: String, balance: usize) {
+        if self.bank_accounts.contains_key(&name){
+            panic!("Account already exists");
+        }
         self.bank_accounts
             .insert(name.clone(), BankAccount::new(name, balance));
         let mut file = File::create(&self.data_path).unwrap();
@@ -60,6 +68,10 @@ impl Bank {
             Ok(_) => (),
             Err(e) => println!("Could not write serialized data to file, Err: {}", e),
         }
+    }
+
+    pub fn view_balance() {
+        todo!();
     }
 }
 
@@ -84,8 +96,6 @@ mod tests {
     use std::{fs, path::Path};
 
     use super::*;
-
-    const TEST_PATH: &str = "test_data";
 
     #[test]
     fn test_bank_new() {
