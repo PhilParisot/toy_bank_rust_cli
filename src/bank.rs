@@ -2,13 +2,8 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
     fs::File,
-    io::{Read, Write},
+    io::{Read, Write, Error},
 };
-
-// Added all paths here so that all paths are in the same location
-pub const PATH: &str = "data";
-const TEST_PATH: &str = "test_data";
-
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Bank {
@@ -53,12 +48,12 @@ impl Bank {
     //
     // I'm also cloning "name" when a borrow and pointer to BankAccount.name would be preferable
     // But causing problems with the serializer and lifetime
-    pub fn create_account(&mut self, name: String, balance: usize) {
-        if self.bank_accounts.contains_key(&name){
+    pub fn create_account(&mut self, name: &String, balance: usize) {
+        if self.bank_accounts.contains_key(name) {
             panic!("Account already exists");
         }
         self.bank_accounts
-            .insert(name.clone(), BankAccount::new(name, balance));
+            .insert(name.clone(), BankAccount::new(name.clone(), balance));
         let mut file = File::create(&self.data_path).unwrap();
         match file.write_all(
             serde_json::to_string(&self.bank_accounts)
@@ -70,8 +65,19 @@ impl Bank {
         }
     }
 
-    pub fn view_balance() {
-        todo!();
+    pub fn transfer(&mut self, from: &String, to: &String, amount: usize) -> Result<(), String>{
+        let mut from_account: &BankAccount = self.bank_accounts.get_mut(from)?;
+        let mut to_account: &BankAccount = self.bank_accounts.get_mut(to)?;
+
+        Ok(())
+    }
+
+    pub fn view_balance(&self, account_name: &String) {
+        println!(
+            "{}'s current balance is: {}",
+            account_name,
+            self.bank_accounts.get(account_name).unwrap().balance()
+        );
     }
 }
 
@@ -86,36 +92,49 @@ impl BankAccount {
         Self { name, balance }
     }
 
-    fn balance(&self) -> usize {
-        self.balance
+    fn balance(&self) -> &usize {
+        &self.balance
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::{fs, path::Path};
-
     use super::*;
+    use std::{fs, path::Path};
+    const TEST_FILE_CREATION_PATH: &str = "test_file_creation";
+    const TEST_BANK_NEW_PATH: &str = "test_bank_new";
+    const NEW_INSTANCE_OLD_DATA_PATH: &str = "new_instance_old_data";
 
     #[test]
     fn test_bank_new() {
-        _ = Bank::new(TEST_PATH.to_string());
-        assert!(Path::new(TEST_PATH).exists());
-        fs::remove_file(TEST_PATH).unwrap();
+        _ = Bank::new(TEST_BANK_NEW_PATH.to_string());
+        assert!(Path::new(TEST_BANK_NEW_PATH).exists());
+        fs::remove_file(TEST_BANK_NEW_PATH).unwrap();
     }
 
     #[test]
     fn test_file_creation() {
-        let mut bank = Bank::new(TEST_PATH.to_string());
-        bank.create_account(String::from("Phil"), 5);
-        bank.create_account(String::from("Rizza"), 1000);
+        let mut bank = Bank::new(TEST_FILE_CREATION_PATH.to_string());
+        bank.create_account(&String::from("Phil"), 5);
+        bank.create_account(&String::from("Rizza"), 1000);
+        fs::remove_file(TEST_FILE_CREATION_PATH).unwrap();
     }
 
     #[test]
-    fn test_file_read() {
-        test_file_creation();
-        let bank = Bank::new(TEST_PATH.to_string());
-        assert!(bank.bank_accounts.len() == 2);
+    fn new_instance_old_data() {
+        match fs::remove_file(NEW_INSTANCE_OLD_DATA_PATH) {
+            Ok(_) => println!("File removed"),
+            Err(_) => println!("No file to remove"),
+        }
+        {
+            let mut bank = Bank::new(NEW_INSTANCE_OLD_DATA_PATH.to_string());
+            bank.create_account(&String::from("Phil"), 5);
+            bank.create_account(&String::from("Rizza"), 1000);
+        }
+        let mut bank = Bank::new(NEW_INSTANCE_OLD_DATA_PATH.to_string());
+        bank.create_account(&String::from("Carmen"), 999);
+        bank.create_account(&String::from("Zack"), 77777);
+        assert!(bank.bank_accounts.len() == 4);
         for (name, bank_account) in bank.bank_accounts {
             println!("Account: {}, Balance: {}", name, bank_account.balance());
         }
