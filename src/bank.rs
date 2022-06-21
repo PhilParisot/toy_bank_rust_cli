@@ -1,8 +1,9 @@
+use bank_account::BankAccount;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
     fs::File,
-    io::{Read, Write, Error},
+    io::{Read, Write},
 };
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -54,20 +55,30 @@ impl Bank {
         }
         self.bank_accounts
             .insert(name.clone(), BankAccount::new(name.clone(), balance));
-        let mut file = File::create(&self.data_path).unwrap();
-        match file.write_all(
-            serde_json::to_string(&self.bank_accounts)
-                .unwrap()
-                .as_bytes(),
-        ) {
-            Ok(_) => (),
-            Err(e) => println!("Could not write serialized data to file, Err: {}", e),
-        }
+
+        self.save_data();
     }
 
-    pub fn transfer(&mut self, from: &String, to: &String, amount: usize) -> Result<(), String>{
-        let mut from_account: &BankAccount = self.bank_accounts.get_mut(from)?;
-        let mut to_account: &BankAccount = self.bank_accounts.get_mut(to)?;
+    pub fn transfer(&mut self, from: &String, to: &String, amount: usize) -> Result<(), String> {
+        let from_funds: &mut usize = match self.bank_accounts.get_mut(from) {
+            Some(i) => i.balance_mut(),
+            None => return Err(format!("Could not retrieve balance from {from}")),
+        };
+
+        if *from_funds < amount {
+            return Err(format!("Not enough funds in {from} to transfer"));
+        }
+
+        *from_funds -= amount;
+
+        let to_funds: &mut usize = match self.bank_accounts.get_mut(to) {
+            Some(i) => i.balance_mut(),
+            None => return Err(format!("Could not retrieve balance from {from}")),
+        };
+
+        *to_funds += amount;
+
+        self.save_data();
 
         Ok(())
     }
@@ -79,21 +90,41 @@ impl Bank {
             self.bank_accounts.get(account_name).unwrap().balance()
         );
     }
+
+    fn save_data(&self) {
+        let mut file = File::create(&self.data_path).unwrap();
+        match file.write_all(
+            serde_json::to_string(&self.bank_accounts)
+                .unwrap()
+                .as_bytes(),
+        ) {
+            Ok(_) => (),
+            Err(e) => println!("Could not write serialized data to file, Err: {}", e),
+        }
+    }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-struct BankAccount {
-    name: String,
-    balance: usize,
-}
+mod bank_account {
+    use serde::{Deserialize, Serialize};
 
-impl BankAccount {
-    fn new(name: String, balance: usize) -> Self {
-        Self { name, balance }
+    #[derive(Serialize, Deserialize, Debug)]
+    pub struct BankAccount {
+        name: String,
+        balance: usize,
     }
 
-    fn balance(&self) -> &usize {
-        &self.balance
+    impl BankAccount {
+        pub fn new(name: String, balance: usize) -> Self {
+            Self { name, balance }
+        }
+
+        pub fn balance(&self) -> &usize {
+            &self.balance
+        }
+
+        pub fn balance_mut(&mut self) -> &mut usize {
+            &mut self.balance
+        }
     }
 }
 
@@ -104,6 +135,8 @@ mod tests {
     const TEST_FILE_CREATION_PATH: &str = "test_file_creation";
     const TEST_BANK_NEW_PATH: &str = "test_bank_new";
     const NEW_INSTANCE_OLD_DATA_PATH: &str = "new_instance_old_data";
+    const TRANSFER_PATH: &str = "transfer";
+    const TRANSFER_FAIL_PATH: &str = "transfer_fail";
 
     #[test]
     fn test_bank_new() {
@@ -122,10 +155,7 @@ mod tests {
 
     #[test]
     fn new_instance_old_data() {
-        match fs::remove_file(NEW_INSTANCE_OLD_DATA_PATH) {
-            Ok(_) => println!("File removed"),
-            Err(_) => println!("No file to remove"),
-        }
+        _ = initializing(NEW_INSTANCE_OLD_DATA_PATH);
         {
             let mut bank = Bank::new(NEW_INSTANCE_OLD_DATA_PATH.to_string());
             bank.create_account(&String::from("Phil"), 5);
@@ -133,10 +163,41 @@ mod tests {
         }
         let mut bank = Bank::new(NEW_INSTANCE_OLD_DATA_PATH.to_string());
         bank.create_account(&String::from("Carmen"), 999);
-        bank.create_account(&String::from("Zack"), 77777);
+        bank.create_account(&String::from("Camila"), 77777);
+
         assert!(bank.bank_accounts.len() == 4);
         for (name, bank_account) in bank.bank_accounts {
             println!("Account: {}, Balance: {}", name, bank_account.balance());
         }
+    }
+
+    #[test]
+    fn transfer() {
+        let mut bank = initializing(TRANSFER_PATH);
+        bank.create_account(&String::from("Phil"), 5);
+        bank.create_account(&String::from("Rizza"), 1000);
+        bank.transfer(&"Phil".to_string(), &"Rizza".to_string(), 5)
+            .unwrap();
+
+        assert!(*bank.bank_accounts.get("Phil").unwrap().balance() == 0);
+        assert!(*bank.bank_accounts.get("Rizza").unwrap().balance() == 1005);
+    }
+
+    #[test]
+    #[should_panic]
+    fn transfer_fail() {
+        let mut bank = initializing(TRANSFER_FAIL_PATH);
+        bank.create_account(&String::from("Phil"), 5);
+        bank.create_account(&String::from("Rizza"), 1000);
+        bank.transfer(&"Phil".to_string(), &"Rizza".to_string(), 6)
+            .unwrap();
+    }
+
+    fn initializing(path: &str) -> Bank {
+        match fs::remove_file(path) {
+            Ok(_) => println!("File removed"),
+            Err(_) => println!("No file to remove"),
+        }
+        Bank::new(path.to_string())
     }
 }
