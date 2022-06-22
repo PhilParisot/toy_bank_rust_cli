@@ -1,6 +1,6 @@
 mod bank;
 
-use std::env::{args};
+use std::{env::args, fs};
 
 const PATH: &str = "data/prod_data";
 
@@ -13,7 +13,7 @@ fn main() {
             println!("Too many arguments");
             return;
         }
-        i if i < 3 => {
+        i if i < 2 => {
             println!("Too few arguments");
             return;
         }
@@ -22,6 +22,12 @@ fn main() {
 
     match args().nth(1) {
         Some(i) => match i.as_str() {
+            "-h" | "--help" => {
+                println!(
+                    "{}",
+                    fs::read_to_string("src/help.txt").expect("Could not read help.txt")
+                )
+            }
             "create-account" => bank_instance.create_account(
                 &args().nth(2).unwrap(),
                 args().nth(3).unwrap().parse().unwrap(),

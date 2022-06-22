@@ -1,0 +1,11 @@
+USAGE:
+    cargo run -q -- [OPTIONS] [args]
+
+ARGS:
+    <args>...
+
+OPTIONS:
+    balance <account>                                       Prints available funds in an account
+    create-account <name-of-account> <starting-balance>     Creates accounts with balance and stores data locally
+    -h, --help                                              Print help information
+    transfer <from-account> <to-account> <amount>           Transfers funds from one account to another and stores data locally

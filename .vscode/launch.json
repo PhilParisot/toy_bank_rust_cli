@@ -40,6 +40,26 @@
             },
             "args": [],
             "cwd": "${workspaceFolder}"
-        }
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'toy_bank_rust_cli' with arguments",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=toy_bank_rust_cli",
+                    "--package=toy_bank_rust_cli"
+                ],
+                "filter": {
+                    "name": "toy_bank_rust_cli",
+                    "kind": "bin"
+                }
+            },
+            "args": [
+                "-h"
+            ],
+            "cwd": "${workspaceFolder}"
+        },
     ]
 }

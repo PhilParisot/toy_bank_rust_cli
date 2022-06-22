@@ -14,7 +14,8 @@ ARGS:
     <args>...
 
 OPTIONS:
-    create-account <name-of-account> <starting-balance>     Creates accounts with balance and stores data locally
-    transfer <from-account> <to-account> <amount>           Transfers funds from one account to another and stores data locally
     balance <account>                                       Prints available funds in an account
+    create-account <name-of-account> <starting-balance>     Creates accounts with balance and stores data locally
+    -h, --help                                              Print help information
+    transfer <from-account> <to-account> <amount>           Transfers funds from one account to another and stores data locally
 ```
