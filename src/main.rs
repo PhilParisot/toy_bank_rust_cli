@@ -2,7 +2,7 @@ mod bank;
 
 use std::env::{args};
 
-const PATH: &str = "prod_data";
+const PATH: &str = "data/prod_data";
 
 use crate::bank::Bank;
 fn main() {

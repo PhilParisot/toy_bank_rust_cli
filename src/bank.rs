@@ -132,11 +132,11 @@ mod bank_account {
 mod tests {
     use super::*;
     use std::{fs, path::Path};
-    const TEST_FILE_CREATION_PATH: &str = "test_file_creation";
-    const TEST_BANK_NEW_PATH: &str = "test_bank_new";
-    const NEW_INSTANCE_OLD_DATA_PATH: &str = "new_instance_old_data";
-    const TRANSFER_PATH: &str = "transfer";
-    const TRANSFER_FAIL_PATH: &str = "transfer_fail";
+    const TEST_FILE_CREATION_PATH: &str = "data/test_file_creation";
+    const TEST_BANK_NEW_PATH: &str = "data/test_bank_new";
+    const NEW_INSTANCE_OLD_DATA_PATH: &str = "data/new_instance_old_data";
+    const TRANSFER_PATH: &str = "data/transfer";
+    const TRANSFER_FAIL_PATH: &str = "data/transfer_fail";
 
     #[test]
     fn test_bank_new() {

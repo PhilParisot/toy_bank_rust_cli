@@ -5,7 +5,7 @@ use std::process::Command;
 
 const BINARY: &str = "toy_bank_rust_cli";
 const CREATE_ACCOUNT: &str = "create-account";
-const PATH: &str = "prod_data";
+const PATH: &str = "data/prod_data";
 
 #[test]
 fn create_same_account() {
