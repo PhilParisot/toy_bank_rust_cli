@@ -8,16 +8,8 @@ use crate::bank::Bank;
 fn main() {
     let mut bank_instance = Bank::new(String::from(PATH));
 
-    match args().len() {
-        i if i > 5 => {
-            println!("Too many arguments");
-            return;
-        }
-        i if i < 2 => {
-            println!("Too few arguments");
-            return;
-        }
-        _ => (),
+    if args().len() < 2 {
+        invalid_entry()
     }
 
     match args().nth(1) {
@@ -43,10 +35,16 @@ fn main() {
             }
 
             "balance" => bank_instance.view_balance(&args().nth(2).unwrap()),
-            &_ => {
-                println!("No valid entry");
-            }
+            &_ => invalid_entry(),
         },
         None => (),
     };
+}
+
+fn invalid_entry() {
+    println!("Invalid entry\n");
+    println!(
+        "{}",
+        fs::read_to_string("src/help.txt").expect("Could not read help.txt")
+    )
 }
