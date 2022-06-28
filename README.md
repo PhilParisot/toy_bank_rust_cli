@@ -1,6 +1,6 @@
 # Toy Bank Rust CLI
 
-`print_test_script.sh` is a small `bash` script you can run out the box with if you have `cargo` installed in your path to print normal output.
+`print_test_script.sh` is a small `bash` script you can run out the box with if you have `cargo` installed in your path to quickly test and print normal output.
 
 Running `cargo test` will run all unit and integration tests.
 
